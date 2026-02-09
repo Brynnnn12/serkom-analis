@@ -8,14 +8,44 @@ use App\Models\Tagihan;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
+/**
+ * Controller untuk mengelola data penggunaan listrik pelanggan
+ *
+ * Modul ini menangani operasi CRUD untuk data penggunaan listrik,
+ * termasuk perhitungan meter awal dari bulan sebelumnya dan validasi data.
+ *
+ * @package App\Http\Controllers
+ */
 class PenggunaanController extends Controller
 {
+    /**
+     * Menampilkan daftar semua data penggunaan listrik
+     *
+     * Method ini mengambil semua data penggunaan beserta relasi pelanggan dan tagihan,
+     * kemudian menampilkannya dalam view index penggunaan.
+     *
+     * @return \Illuminate\View\View
+     */
     public function index()
     {
         $penggunaans = Penggunaan::with(['pelanggan.tarif', 'tagihan'])->latest()->get();
         return view('penggunaans.index', compact('penggunaans'));
     }
 
+    /**
+     * Mengambil meter awal dari penggunaan bulan sebelumnya
+     *
+     * Method ini digunakan untuk mendapatkan meter akhir dari bulan sebelumnya
+     * sebagai meter awal untuk bulan saat ini. Algoritma pencarian:
+     * 1. Validasi input id_pelanggan, bulan, dan tahun
+     * 2. Cari penggunaan dengan tahun lebih kecil atau tahun sama tapi bulan lebih kecil
+     * 3. Urutkan berdasarkan tahun dan bulan descending
+     * 4. Ambil meter_ahir dari record pertama sebagai meter_awal
+     *
+     * @param \Illuminate\Http\Request $request Request berisi id_pelanggan, bulan, tahun
+     * @return \Illuminate\Http\JsonResponse JSON response dengan meter_awal dan info bulan sebelumnya
+     * @throws \Illuminate\Validation\ValidationException Jika validasi gagal
+     */
     public function getPreviousMeter(Request $request)
     {
         $request->validate([
@@ -45,12 +75,37 @@ class PenggunaanController extends Controller
         ]);
     }
 
+    /**
+     * Menampilkan form untuk membuat penggunaan baru
+     *
+     * Method ini menampilkan form create penggunaan dengan daftar pelanggan
+     * yang tersedia untuk dipilih.
+     *
+     * @return \Illuminate\View\View
+     */
     public function create()
     {
         $pelanggans = Pelanggan::all();
         return view('penggunaans.create', compact('pelanggans'));
     }
 
+    /**
+     * Menyimpan data penggunaan baru ke database
+     *
+     * Algoritma penyimpanan:
+     * 1. Validasi input (id_pelanggan, bulan, tahun, meter_ahir)
+     * 2. Cek duplikasi penggunaan untuk bulan/tahun yang sama
+     * 3. Hitung meter_awal dari penggunaan bulan sebelumnya
+     * 4. Validasi meter_ahir > meter_awal
+     * 5. Hitung jumlah_meter = meter_ahir - meter_awal
+     * 6. Simpan data penggunaan
+     * 7. Hitung total tagihan berdasarkan tarif per kWh
+     * 8. Buat tagihan otomatis dengan status 'Belum Bayar'
+     *
+     * @param \Illuminate\Http\Request $request Request berisi data penggunaan
+     * @return \Illuminate\Http\RedirectResponse Redirect ke index dengan pesan sukses/error
+     * @throws \Illuminate\Validation\ValidationException Jika validasi gagal
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -122,18 +177,53 @@ class PenggunaanController extends Controller
         return redirect()->route('penggunaans.index')->with('success', 'Penggunaan berhasil dicatat dan tagihan otomatis dibuat.');
     }
 
+    /**
+     * Menampilkan detail penggunaan tertentu
+     *
+     * Method ini menampilkan detail lengkap dari sebuah penggunaan
+     * beserta relasi pelanggan, tarif, dan tagihan yang terkait.
+     *
+     * @param \App\Models\Penggunaan $penggunaan Instance model Penggunaan
+     * @return \Illuminate\View\View
+     */
     public function show(Penggunaan $penggunaan)
     {
         $penggunaan->load(['pelanggan.tarif', 'tagihan']);
         return view('penggunaans.show', compact('penggunaan'));
     }
 
+    /**
+     * Menampilkan form edit untuk penggunaan tertentu
+     *
+     * Method ini menampilkan form edit dengan data penggunaan yang akan diubah
+     * dan daftar pelanggan yang tersedia.
+     *
+     * @param \App\Models\Penggunaan $penggunaan Instance model Penggunaan yang akan diedit
+     * @return \Illuminate\View\View
+     */
     public function edit(Penggunaan $penggunaan)
     {
         $pelanggans = Pelanggan::all();
         return view('penggunaans.edit', compact('penggunaan', 'pelanggans'));
     }
 
+    /**
+     * Memperbarui data penggunaan yang ada
+     *
+     * Algoritma update sama dengan store namun dengan pengecualian record sendiri:
+     * 1. Validasi input (id_pelanggan, bulan, tahun, meter_ahir)
+     * 2. Cek duplikasi dengan record lain untuk bulan/tahun yang sama
+     * 3. Hitung ulang meter_awal dari penggunaan bulan sebelumnya (exclude current)
+     * 4. Validasi meter_ahir > meter_awal
+     * 5. Hitung ulang jumlah_meter = meter_ahir - meter_awal
+     * 6. Update data penggunaan
+     * 7. Update tagihan terkait dengan data baru
+     *
+     * @param \Illuminate\Http\Request $request Request berisi data update
+     * @param \App\Models\Penggunaan $penggunaan Instance model yang akan diupdate
+     * @return \Illuminate\Http\RedirectResponse Redirect ke index dengan pesan sukses/error
+     * @throws \Illuminate\Validation\ValidationException Jika validasi gagal
+     */
     public function update(Request $request, Penggunaan $penggunaan)
     {
         $request->validate([
@@ -184,6 +274,7 @@ class PenggunaanController extends Controller
             'bulan' => $request->bulan,
             'tahun' => $request->tahun,
             'meter_awal' => $meter_awal,
+            'meter_awal' => $meter_awal,
             'meter_ahir' => $request->meter_ahir,
         ]);
 
@@ -205,6 +296,17 @@ class PenggunaanController extends Controller
         return redirect()->route('penggunaans.index')->with('success', 'Penggunaan berhasil diperbarui.');
     }
 
+    /**
+     * Menghapus data penggunaan dan tagihan terkait
+     *
+     * Method ini menghapus data penggunaan beserta tagihan yang terkait.
+     * Algoritma penghapusan:
+     * 1. Hapus semua tagihan yang terkait dengan penggunaan ini
+     * 2. Hapus data penggunaan
+     *
+     * @param \App\Models\Penggunaan $penggunaan Instance model yang akan dihapus
+     * @return \Illuminate\Http\RedirectResponse Redirect ke index dengan pesan sukses
+     */
     public function destroy(Penggunaan $penggunaan)
     {
         // Hapus tagihan yang terkait terlebih dahulu

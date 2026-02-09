@@ -9,8 +9,27 @@ use App\Models\Pelanggan;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Controller untuk menangani autentikasi pengguna (Admin dan Pelanggan)
+ *
+ * Modul ini bertanggung jawab untuk:
+ * - Menampilkan form login
+ * - Memproses login untuk dua guard berbeda (web untuk admin, pelanggan untuk customer)
+ * - Menangani logout
+ *
+ * @package App\Http\Controllers
+ */
 class AuthController extends Controller
 {
+    /**
+     * Menampilkan form login
+     *
+     * Mengecek apakah pengguna sudah login, jika ya redirect ke dashboard masing-masing.
+     * Jika belum, tampilkan form login.
+     *
+     * @param Request $request Objek request HTTP
+     * @return \Illuminate\Http\RedirectResponse|\Illuminate\View\View
+     */
     public function showLoginForm(Request $request)
     {
         // Jika sudah login sebagai admin, redirect ke dashboard admin
@@ -28,6 +47,17 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    /**
+     * Memproses login pengguna
+     *
+     * Validasi input username dan password, kemudian coba autentikasi
+     * terhadap guard 'web' (admin) dan 'pelanggan' (customer).
+     * Redirect ke dashboard sesuai role jika berhasil.
+     *
+     * @param Request $request Objek request dengan input username dan password
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Validation\ValidationException Jika validasi gagal
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -52,6 +82,15 @@ class AuthController extends Controller
         ])->onlyInput('username');
     }
 
+    /**
+     * Menangani logout pengguna
+     *
+     * Logout dari guard yang aktif (web atau pelanggan),
+     * invalidate session, dan redirect ke home.
+     *
+     * @param Request $request Objek request HTTP
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function logout(Request $request)
     {
         // Logout dari guard yang aktif

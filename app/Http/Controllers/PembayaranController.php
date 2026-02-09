@@ -7,8 +7,34 @@ use App\Models\Tagihan;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
+/**
+ * Controller untuk mengelola transaksi pembayaran tagihan listrik
+ *
+ * Modul ini menangani operasi pembayaran dengan dual authentication:
+ * - Admin: Mengelola semua pembayaran dengan filtering dan pencarian
+ * - Pelanggan: Melihat history pembayaran sendiri
+ *
+ * Fitur utama:
+ * - Pencatatan pembayaran dengan biaya admin dan kembalian
+ * - Validasi pembayaran terhadap total tagihan
+ * - Update status tagihan otomatis setelah pembayaran
+ * - Audit trail dengan mencegah edit/hapus pembayaran
+ *
+ * @package App\Http\Controllers
+ */
 class PembayaranController extends Controller
 {
+    /**
+     * Menampilkan daftar pembayaran dengan filtering berdasarkan role
+     *
+     * Algoritma tampilan:
+     * - Admin: Lihat semua pembayaran dengan filter bulan/tahun
+     * - Pelanggan: Lihat hanya pembayaran tagihan mereka sendiri
+     * - Load relasi tagihan.pelanggan dan user untuk detail lengkap
+     *
+     * @param \Illuminate\Http\Request $request Request dengan parameter filter bulan/tahun
+     * @return \Illuminate\View\View
+     */
     public function index(Request $request)
     {
         // Cek guard yang digunakan
@@ -41,6 +67,18 @@ class PembayaranController extends Controller
         return view('pembayarans.index', compact('pembayarans', 'isAdmin'));
     }
 
+    /**
+     * Menampilkan form pembayaran baru (khusus admin)
+     *
+     * Method ini menampilkan form pembayaran dengan opsi:
+     * - Pencarian tagihan berdasarkan ID pelanggan
+     * - Tagihan spesifik dari parameter tagihan_id
+     * - Validasi bahwa tagihan belum dibayar
+     *
+     * @param \Illuminate\Http\Request $request Request dengan parameter id_pelanggan atau tagihan_id
+     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException Jika akses ditolak
+     */
     public function create(Request $request)
     {
         // Admin: Form pembayaran untuk tagihan tertentu
@@ -81,6 +119,24 @@ class PembayaranController extends Controller
         return view('pembayarans.create', compact('tagihan', 'tagihans', 'pelanggan'));
     }
 
+    /**
+     * Memproses pembayaran tagihan (khusus admin)
+     *
+     * Algoritma pemrosesan pembayaran:
+     * 1. Validasi akses admin dan input (id_tagihan, uang_dibayar, biaya_admin)
+     * 2. Ambil data tagihan dengan relasi pelanggan dan tarif
+     * 3. Pastikan tagihan belum dibayar (status != 'Terbayar')
+     * 4. Hitung total_bayar = (jumlah_meter * tarif_per_kwh) + biaya_admin
+     * 5. Validasi uang_dibayar >= total_bayar
+     * 6. Hitung kembalian = uang_dibayar - total_bayar
+     * 7. Simpan data pembayaran dengan timestamp saat ini
+     * 8. Update status tagihan menjadi 'Terbayar'
+     *
+     * @param \Illuminate\Http\Request $request Request berisi data pembayaran
+     * @return \Illuminate\Http\RedirectResponse Redirect ke detail pembayaran atau kembali dengan error
+     * @throws \Illuminate\Validation\ValidationException Jika validasi gagal
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException Jika akses ditolak
+     */
     public function store(Request $request)
     {
         if (!auth()->guard('web')->check()) {
@@ -132,6 +188,18 @@ class PembayaranController extends Controller
         return redirect()->route('pembayarans.show', $pembayaran)->with('success', 'Pembayaran berhasil diproses.');
     }
 
+    /**
+     * Menampilkan detail pembayaran tertentu
+     *
+     * Method ini menampilkan detail lengkap pembayaran dengan kontrol akses:
+     * - Admin: Bisa lihat semua pembayaran
+     * - Pelanggan: Hanya bisa lihat pembayaran tagihan mereka sendiri
+     * - Load relasi lengkap untuk detail tagihan, pelanggan, tarif, penggunaan, dan user
+     *
+     * @param \App\Models\Pembayaran $pembayaran Instance model Pembayaran
+     * @return \Illuminate\View\View
+     * @throws \Symfony\Component\HttpKernel\Exception\HttpException Jika akses ditolak
+     */
     public function show(Pembayaran $pembayaran)
     {
         // Cek akses: admin bisa lihat semua, pelanggan hanya pembayaran tagihan mereka
@@ -145,18 +213,37 @@ class PembayaranController extends Controller
         return view('pembayarans.show', compact('pembayaran'));
     }
 
+    /**
+     * Redirect edit - pembayaran tidak bisa diedit untuk audit trail
+     *
+     * @param \App\Models\Pembayaran $pembayaran Instance model (tidak digunakan)
+     * @return \Illuminate\Http\RedirectResponse Redirect dengan pesan error
+     */
     public function edit(Pembayaran $pembayaran)
     {
         // Pembayaran tidak bisa diedit
         return redirect()->route('pembayarans.index')->with('error', 'Pembayaran tidak bisa diedit.');
     }
 
+    /**
+     * Redirect update - pembayaran tidak bisa diupdate untuk audit trail
+     *
+     * @param \Illuminate\Http\Request $request Request (tidak digunakan)
+     * @param \App\Models\Pembayaran $pembayaran Instance model (tidak digunakan)
+     * @return \Illuminate\Http\RedirectResponse Redirect dengan pesan error
+     */
     public function update(Request $request, Pembayaran $pembayaran)
     {
         // Pembayaran tidak bisa diupdate
         return redirect()->route('pembayarans.index')->with('error', 'Pembayaran tidak bisa diupdate.');
     }
 
+    /**
+     * Redirect destroy - pembayaran tidak bisa dihapus untuk audit trail
+     *
+     * @param \App\Models\Pembayaran $pembayaran Instance model (tidak digunakan)
+     * @return \Illuminate\Http\RedirectResponse Redirect dengan pesan error
+     */
     public function destroy(Pembayaran $pembayaran)
     {
         // Pembayaran tidak bisa dihapus (untuk audit trail)
