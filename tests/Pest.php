@@ -12,7 +12,7 @@
 */
 
 pest()->extend(Tests\TestCase::class)
- // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -44,4 +44,55 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function createAdminUser()
+{
+    $level = \App\Models\Level::create(['nama_level' => 'Admin']);
+    return \App\Models\User::factory()->create(['id_level' => $level->id_level]);
+}
+
+function createAdminLevel()
+{
+    return \App\Models\Level::create(['nama_level' => 'Admin']);
+}
+
+function createTarif($attributes = [])
+{
+    $default = [
+        'daya' => '900 VA',
+        'tarifperkwh' => 1500
+    ];
+    return \App\Models\Tarif::create(array_merge($default, $attributes));
+}
+
+function createPelanggan($tarif = null)
+{
+    if (!$tarif) {
+        $tarif = createTarif();
+    }
+    return \App\Models\Pelanggan::factory()->create(['id_tarif' => $tarif->id_tarif]);
+}
+
+function createPenggunaanDanTagihan($pelanggan, $attributes = [])
+{
+    $defaultPenggunaan = [
+        'id_pelanggan' => $pelanggan->id_pelanggan,
+        'bulan' => 2,
+        'tahun' => 2026,
+        'meter_awal' => 100,
+        'meter_ahir' => 150
+    ];
+    $penggunaan = \App\Models\Penggunaan::create(array_merge($defaultPenggunaan, $attributes));
+
+    $tagihan = \App\Models\Tagihan::create([
+        'id_penggunaan' => $penggunaan->id_penggunaan,
+        'id_pelanggan' => $pelanggan->id_pelanggan,
+        'bulan' => $penggunaan->bulan,
+        'tahun' => $penggunaan->tahun,
+        'jumlah_meter' => $penggunaan->meter_ahir - $penggunaan->meter_awal,
+        'status' => 'Belum Bayar'
+    ]);
+
+    return ['penggunaan' => $penggunaan, 'tagihan' => $tagihan];
 }

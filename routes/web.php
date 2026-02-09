@@ -22,8 +22,8 @@ Route::middleware('auth:web')->prefix('admin')->group(function () {
     Route::resource('tarifs', App\Http\Controllers\TarifController::class);
     Route::resource('pelanggans', App\Http\Controllers\PelangganController::class);
     Route::resource('users', App\Http\Controllers\UserController::class);
+    Route::get('penggunaans/get-meter-awal', [App\Http\Controllers\PenggunaanController::class, 'getPreviousMeter'])->name('penggunaans.getPreviousMeter');
     Route::resource('penggunaans', App\Http\Controllers\PenggunaanController::class);
-    Route::post('penggunaans/get-previous-meter', [App\Http\Controllers\PenggunaanController::class, 'getPreviousMeter'])->name('penggunaans.getPreviousMeter');
     Route::resource('tagihans', App\Http\Controllers\TagihanController::class);
     Route::resource('pembayarans', App\Http\Controllers\PembayaranController::class);
 });

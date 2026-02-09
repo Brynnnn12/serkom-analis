@@ -68,6 +68,13 @@ class User extends Authenticatable
     protected $primaryKey = 'id_user';
 
     /**
+     * The guard to use for authentication.
+     *
+     * @var string
+     */
+    protected $guard = 'web';
+
+    /**
      * Relasi ke model Level
      *
      * Setiap user memiliki satu level akses

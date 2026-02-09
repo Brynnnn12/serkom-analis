@@ -7,6 +7,7 @@ use App\Models\Pelanggan;
 use App\Models\Tagihan;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Controller untuk mengelola data penggunaan listrik pelanggan
@@ -48,19 +49,21 @@ class PenggunaanController extends Controller
      */
     public function getPreviousMeter(Request $request)
     {
-        $request->validate([
-            'id_pelanggan' => 'required|exists:pelanggans,id_pelanggan',
-            'bulan' => 'required|integer|min:1|max:12',
-            'tahun' => 'required|integer|min:2020|max:' . (date('Y') + 1),
-        ]);
+        $id_pelanggan = $request->input('id_pelanggan');
+        $bulan = $request->input('bulan');
+        $tahun = $request->input('tahun');
+
+        if (!$id_pelanggan || !$bulan || !$tahun) {
+            return response()->json(['error' => 'Missing required parameters'], 400);
+        }
 
         // Ambil meter_awal dari penggunaan bulan sebelumnya
-        $previousPenggunaan = Penggunaan::where('id_pelanggan', $request->id_pelanggan)
-            ->where(function($query) use ($request) {
-                $query->where('tahun', '<', $request->tahun)
-                    ->orWhere(function($q) use ($request) {
-                        $q->where('tahun', $request->tahun)
-                          ->where('bulan', '<', $request->bulan);
+        $previousPenggunaan = Penggunaan::where('id_pelanggan', $id_pelanggan)
+            ->where(function($query) use ($tahun, $bulan) {
+                $query->where('tahun', '<', $tahun)
+                    ->orWhere(function($q) use ($tahun, $bulan) {
+                        $q->where('tahun', $tahun)
+                          ->where('bulan', '<', $bulan);
                     });
             })
             ->orderBy('tahun', 'desc')
@@ -73,6 +76,58 @@ class PenggunaanController extends Controller
             'meter_awal' => $meter_awal,
             'bulan_sebelumnya' => $previousPenggunaan ? $previousPenggunaan->bulan . '/' . $previousPenggunaan->tahun : null
         ]);
+    }
+
+    /**
+     * Helper method untuk mendapatkan meter awal dari bulan sebelumnya
+     *
+     * @param int $id_pelanggan ID pelanggan
+     * @param int $bulan Bulan target
+     * @param int $tahun Tahun target
+     * @return float Meter awal (0 jika tidak ada data sebelumnya)
+     */
+    private function getPreviousMeterValue($id_pelanggan, $bulan, $tahun)
+    {
+        $previousPenggunaan = Penggunaan::where('id_pelanggan', $id_pelanggan)
+            ->where(function($query) use ($tahun, $bulan) {
+                $query->where('tahun', '<', $tahun)
+                    ->orWhere(function($q) use ($tahun, $bulan) {
+                        $q->where('tahun', $tahun)
+                          ->where('bulan', '<', $bulan);
+                    });
+            })
+            ->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc')
+            ->first();
+
+        return $previousPenggunaan ? $previousPenggunaan->meter_ahir : 0;
+    }
+
+    /**
+     * Helper method untuk mendapatkan meter awal dari bulan sebelumnya (exclude current record)
+     *
+     * @param int $id_pelanggan ID pelanggan
+     * @param int $bulan Bulan target
+     * @param int $tahun Tahun target
+     * @param int $exclude_id ID penggunaan yang akan di-exclude
+     * @return float Meter awal (0 jika tidak ada data sebelumnya)
+     */
+    private function getPreviousMeterValueExcludingCurrent($id_pelanggan, $bulan, $tahun, $exclude_id)
+    {
+        $previousPenggunaan = Penggunaan::where('id_pelanggan', $id_pelanggan)
+            ->where('id_penggunaan', '!=', $exclude_id)
+            ->where(function($query) use ($tahun, $bulan) {
+                $query->where('tahun', '<', $tahun)
+                    ->orWhere(function($q) use ($tahun, $bulan) {
+                        $q->where('tahun', $tahun)
+                          ->where('bulan', '<', $bulan);
+                    });
+            })
+            ->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc')
+            ->first();
+
+        return $previousPenggunaan ? $previousPenggunaan->meter_ahir : 0;
     }
 
     /**
@@ -126,53 +181,45 @@ class PenggunaanController extends Controller
         }
 
         // Ambil meter_awal dari penggunaan bulan sebelumnya
-        $previousPenggunaan = Penggunaan::where('id_pelanggan', $request->id_pelanggan)
-            ->where(function($query) use ($request) {
-                $query->where('tahun', '<', $request->tahun)
-                    ->orWhere(function($q) use ($request) {
-                        $q->where('tahun', $request->tahun)
-                          ->where('bulan', '<', $request->bulan);
-                    });
-            })
-            ->orderBy('tahun', 'desc')
-            ->orderBy('bulan', 'desc')
-            ->first();
-
-        $meter_awal = $previousPenggunaan ? $previousPenggunaan->meter_ahir : 0;
+        $meter_awal = $this->getPreviousMeterValue($request->id_pelanggan, $request->bulan, $request->tahun);
 
         // Validasi meter_ahir harus lebih besar dari meter_awal
         if ($request->meter_ahir <= $meter_awal) {
             return back()->withInput()->withErrors(['meter_ahir' => 'Meter akhir harus lebih besar dari meter awal (' . $meter_awal . ').']);
         }
 
-        // Hitung jumlah meter
-        $jumlah_meter = $request->meter_ahir - $meter_awal;
+        // Gunakan atomic transaction untuk memastikan konsistensi data
+        $penggunaan = DB::transaction(function () use ($request, $meter_awal) {
 
-        // Simpan penggunaan
-        $penggunaan = Penggunaan::create([
-            'id_pelanggan' => $request->id_pelanggan,
-            'bulan' => $request->bulan,
-            'tahun' => $request->tahun,
-            'meter_awal' => $meter_awal,
-            'meter_ahir' => $request->meter_ahir,
-        ]);
+            // Hitung jumlah meter
+            $jumlah_meter = $request->meter_ahir - $meter_awal;
 
-        // Ambil data pelanggan dan tarif
-        $pelanggan = Pelanggan::with('tarif')->find($request->id_pelanggan);
-        $tarif_per_kwh = $pelanggan->tarif->tarifperkwh ?? 0;
+            // Simpan penggunaan
+            $penggunaan = Penggunaan::create([
+                'id_pelanggan' => $request->id_pelanggan,
+                'bulan' => $request->bulan,
+                'tahun' => $request->tahun,
+                'meter_awal' => $meter_awal,
+                'meter_ahir' => $request->meter_ahir,
+            ]);
 
-        // Hitung total tagihan
-        $total_tagihan = $jumlah_meter * $tarif_per_kwh;
+            // Ambil data pelanggan dan tarif
+            $pelanggan = Pelanggan::with('tarif')->find($request->id_pelanggan);
+            $tarif_per_kwh = $pelanggan->tarif->tarifperkwh ?? 0;
 
-        // Buat tagihan otomatis
-        Tagihan::create([
-            'id_penggunaan' => $penggunaan->id_penggunaan,
-            'id_pelanggan' => $request->id_pelanggan,
-            'bulan' => $request->bulan,
-            'tahun' => $request->tahun,
-            'jumlah_meter' => $jumlah_meter,
-            'status' => 'Belum Bayar',
-        ]);
+            // Hitung total tagihan
+            $total_tagihan = $jumlah_meter * $tarif_per_kwh;
+
+            // Buat tagihan otomatis
+            Tagihan::create([
+                'id_penggunaan' => $penggunaan->id_penggunaan,
+                'id_pelanggan' => $request->id_pelanggan,
+                'bulan' => $request->bulan,
+                'tahun' => $request->tahun,
+                'jumlah_meter' => $jumlah_meter,
+                'status' => 'Belum Bayar',
+            ]);
+        });
 
         return redirect()->route('penggunaans.index')->with('success', 'Penggunaan berhasil dicatat dan tagihan otomatis dibuat.');
     }
@@ -244,54 +291,43 @@ class PenggunaanController extends Controller
             return back()->withInput()->withErrors(['bulan' => 'Penggunaan untuk bulan ini sudah ada.']);
         }
 
-        // Ambil meter_awal dari penggunaan bulan sebelumnya
-        $previousPenggunaan = Penggunaan::where('id_pelanggan', $request->id_pelanggan)
-            ->where(function($query) use ($request) {
-                $query->where('tahun', '<', $request->tahun)
-                    ->orWhere(function($q) use ($request) {
-                        $q->where('tahun', $request->tahun)
-                          ->where('bulan', '<', $request->bulan);
-                    });
-            })
-            ->where('id_penggunaan', '!=', $penggunaan->getKey())
-            ->orderBy('tahun', 'desc')
-            ->orderBy('bulan', 'desc')
-            ->first();
+        // Gunakan atomic transaction untuk memastikan konsistensi data
+        DB::transaction(function () use ($request, $penggunaan) {
+            // Ambil meter_awal dari penggunaan bulan sebelumnya (exclude current)
+            $meter_awal = $this->getPreviousMeterValueExcludingCurrent($request->id_pelanggan, $request->bulan, $request->tahun, $penggunaan->getKey());
 
-        $meter_awal = $previousPenggunaan ? $previousPenggunaan->meter_ahir : 0;
+            // Validasi meter_ahir harus lebih besar dari meter_awal
+            if ($request->meter_ahir <= $meter_awal) {
+                throw new \Exception('Meter akhir harus lebih besar dari meter awal (' . $meter_awal . ').');
+            }
 
-        // Validasi meter_ahir harus lebih besar dari meter_awal
-        if ($request->meter_ahir <= $meter_awal) {
-            return back()->withInput()->withErrors(['meter_ahir' => 'Meter akhir harus lebih besar dari meter awal (' . $meter_awal . ').']);
-        }
+            // Hitung jumlah meter
+            $jumlah_meter = $request->meter_ahir - $meter_awal;
 
-        // Hitung jumlah meter
-        $jumlah_meter = $request->meter_ahir - $meter_awal;
-
-        // Update penggunaan
-        $penggunaan->update([
-            'id_pelanggan' => $request->id_pelanggan,
-            'bulan' => $request->bulan,
-            'tahun' => $request->tahun,
-            'meter_awal' => $meter_awal,
-            'meter_awal' => $meter_awal,
-            'meter_ahir' => $request->meter_ahir,
-        ]);
-
-        // Update tagihan yang terkait
-        $tagihan = Tagihan::where('id_penggunaan', $penggunaan->getKey())->first();
-        if ($tagihan) {
-            $pelanggan = Pelanggan::with('tarif')->find($request->id_pelanggan);
-            $tarif_per_kwh = $pelanggan->tarif->tarifperkwh ?? 0;
-            $total_tagihan = $jumlah_meter * $tarif_per_kwh;
-
-            $tagihan->update([
+            // Update penggunaan
+            $penggunaan->update([
                 'id_pelanggan' => $request->id_pelanggan,
                 'bulan' => $request->bulan,
                 'tahun' => $request->tahun,
-                'jumlah_meter' => $jumlah_meter,
+                'meter_awal' => $meter_awal,
+                'meter_ahir' => $request->meter_ahir,
             ]);
-        }
+
+            // Update tagihan yang terkait
+            $tagihan = Tagihan::where('id_penggunaan', $penggunaan->getKey())->first();
+            if ($tagihan) {
+                $pelanggan = Pelanggan::with('tarif')->find($request->id_pelanggan);
+                $tarif_per_kwh = $pelanggan->tarif->tarifperkwh ?? 0;
+                $total_tagihan = $jumlah_meter * $tarif_per_kwh;
+
+                $tagihan->update([
+                    'id_pelanggan' => $request->id_pelanggan,
+                    'bulan' => $request->bulan,
+                    'tahun' => $request->tahun,
+                    'jumlah_meter' => $jumlah_meter,
+                ]);
+            }
+        });
 
         return redirect()->route('penggunaans.index')->with('success', 'Penggunaan berhasil diperbarui.');
     }

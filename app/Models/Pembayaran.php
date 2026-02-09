@@ -20,8 +20,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $bulan_bayar Bulan pembayaran (1-12)
  * @property float $biaya_admin Biaya administrasi pembayaran
  * @property float $total_bayar Total yang harus dibayar (tagihan + biaya admin)
- * @property float $uang_dibayar Jumlah uang yang dibayar pelanggan
- * @property float $kembalian Kembalian yang diberikan (uang_dibayar - total_bayar)
  * @property \Carbon\Carbon $created_at Timestamp pembuatan
  * @property \Carbon\Carbon $updated_at Timestamp update terakhir
  *
@@ -34,7 +32,7 @@ class Pembayaran extends Model
 
     protected $primaryKey = 'id_pembayaran';
 
-    protected $fillable = ['id_tagihan', 'id_pelanggan', 'id_user', 'tanggal_pembayaran', 'bulan_bayar', 'biaya_admin', 'total_bayar', 'uang_dibayar', 'kembalian'];
+    protected $fillable = ['id_tagihan', 'id_pelanggan', 'id_user', 'tanggal_pembayaran', 'bulan_bayar', 'biaya_admin', 'total_bayar'];
 
     /**
      * Relasi ke model Tagihan

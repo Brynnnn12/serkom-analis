@@ -6,6 +6,7 @@ use App\Models\Pembayaran;
 use App\Models\Tagihan;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Controller untuk mengelola transaksi pembayaran tagihan listrik
@@ -145,7 +146,6 @@ class PembayaranController extends Controller
 
         $request->validate([
             'id_tagihan' => 'required|exists:tagihans,id_tagihan',
-            'uang_dibayar' => 'required|numeric|min:0',
             'biaya_admin' => 'required|numeric|min:0',
         ]);
 
@@ -154,36 +154,32 @@ class PembayaranController extends Controller
 
         // Pastikan tagihan belum dibayar
         if ($tagihan->status === 'Terbayar') {
-            return back()->withInput()->withErrors(['id_tagihan' => 'Tagihan ini sudah dibayar.']);
+            return back()->withErrors(['id_tagihan' => 'Tagihan ini sudah dibayar.']);
         }
 
-        // Hitung total tagihan
-        $total_tagihan = $tagihan->jumlah_meter * ($tagihan->pelanggan->tarif->tarifperkwh ?? 0);
-        $total_bayar = $total_tagihan + $request->biaya_admin;
+        // Gunakan atomic transaction untuk memastikan konsistensi data
+        $pembayaran = DB::transaction(function () use ($request, $tagihan) {
 
-        // Validasi uang dibayar cukup
-        if ($request->uang_dibayar < $total_bayar) {
-            return back()->withInput()->withErrors(['uang_dibayar' => 'Uang yang dibayar kurang. Total yang harus dibayar: Rp ' . number_format($total_bayar, 0, ',', '.')]);
-        }
+            // Hitung total tagihan
+            $total_tagihan = $tagihan->jumlah_meter * ($tagihan->pelanggan->tarif->tarifperkwh ?? 0);
+            $total_bayar = $total_tagihan + $request->biaya_admin;
 
-        // Hitung kembalian
-        $kembalian = $request->uang_dibayar - $total_bayar;
+            // Simpan pembayaran
+            $pembayaran = Pembayaran::create([
+                'id_tagihan' => $request->id_tagihan,
+                'id_pelanggan' => $tagihan->id_pelanggan,
+                'id_user' => auth()->guard('web')->id(),
+                'tanggal_pembayaran' => Carbon::now(),
+                'bulan_bayar' => $tagihan->bulan,
+                'biaya_admin' => $request->biaya_admin,
+                'total_bayar' => $total_bayar,
+            ]);
 
-        // Simpan pembayaran
-        $pembayaran = Pembayaran::create([
-            'id_tagihan' => $request->id_tagihan,
-            'id_pelanggan' => $tagihan->id_pelanggan,
-            'id_user' => auth()->guard('web')->id(),
-            'tanggal_pembayaran' => Carbon::now(),
-            'bulan_bayar' => $tagihan->bulan,
-            'biaya_admin' => $request->biaya_admin,
-            'total_bayar' => $total_bayar,
-            'uang_dibayar' => $request->uang_dibayar,
-            'kembalian' => $kembalian,
-        ]);
+            // Update status tagihan menjadi Terbayar
+            $tagihan->update(['status' => 'Terbayar']);
 
-        // Update status tagihan menjadi Terbayar
-        $tagihan->update(['status' => 'Terbayar']);
+            return $pembayaran;
+        });
 
         return redirect()->route('pembayarans.show', $pembayaran)->with('success', 'Pembayaran berhasil diproses.');
     }

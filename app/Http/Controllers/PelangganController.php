@@ -25,7 +25,7 @@ class PelangganController extends Controller
     {
         $request->validate([
             'nama_pelanggan' => 'required|string|max:255',
-            'nomor_kwh' => 'required|string|unique:pelanggans',
+            'nomor_kwh' => 'required|string|min:10|unique:pelanggans',
             'alamat' => 'required|string',
             'id_tarif' => 'required|exists:tarifs,id_tarif',
             'username' => 'required|string|unique:pelanggans',

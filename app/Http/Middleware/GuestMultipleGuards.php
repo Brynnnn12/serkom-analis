@@ -10,7 +10,8 @@ use Symfony\Component\HttpFoundation\Response;
 class GuestMultipleGuards
 {
     /**
-     * Handle an incoming request.
+     * menangani permintaan masuk.
+     *
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
