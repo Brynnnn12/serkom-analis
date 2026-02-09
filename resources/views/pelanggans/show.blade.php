@@ -33,8 +33,8 @@
         </div>
 
         <div class="flex items-center justify-between mt-6">
-            <x-button href="{{ route('pelanggans.index') }}" class="bg-gray-600 hover:bg-gray-700">Kembali</x-button>
-            <x-button href="{{ route('pelanggans.edit', $pelanggan->id_pelanggan) }}">Edit</x-button>
+            <x-button href="{{ route('pelanggans.edit', $pelanggan->id_pelanggan) }}" variant="warning">Edit</x-button>
+            <x-button href="{{ route('pelanggans.index') }}" variant="secondary">Kembali</x-button>
         </div>
     </x-card>
 </x-layouts.dashboard>

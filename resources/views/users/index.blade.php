@@ -36,12 +36,12 @@
                             <td class="px-6 py-4 border border-gray-300">{{ $user->username }}</td>
                             <td class="px-6 py-4 border border-gray-300">{{ $user->level->nama_level ?? 'N/A' }}</td>
                             <td class="px-6 py-4 border border-gray-300">
-                                <x-button href="{{ route('users.edit', $user) }}" class="mr-2 bg-yellow-600 hover:bg-yellow-700">Edit</x-button>
+                                <x-button href="{{ route('users.edit', $user) }}" variant="warning" class="mr-2">Edit</x-button>
                                 @if($user->getKey() != auth()->guard('web')->id())
                                     <form action="{{ route('users.destroy', $user) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <x-button type="submit" class="bg-red-600 hover:bg-red-700" onclick="return confirm('Yakin hapus admin ini?')">Hapus</x-button>
+                                        <x-button type="submit" variant="danger" onclick="return confirm('Yakin hapus admin ini?')">Hapus</x-button>
                                     </form>
                                 @else
                                     <span class="text-gray-500 text-sm">(Akun Anda)</span>

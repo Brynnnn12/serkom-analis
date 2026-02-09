@@ -30,22 +30,31 @@ foreach ($attributes->all() as $__key => $__value) {
 unset($__defined_vars, $__key, $__value); ?>
 
 <!DOCTYPE html>
-<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>">
+<html lang="<?php echo e(str_replace('_', '-', app()->getLocale())); ?>" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title><?php echo e($title ?? 'Dashboard - PLN Bayar Listrik'); ?></title>
+
     <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <!-- Mobile menu overlay -->
-    <div id="mobile-menu-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden" onclick="closeMobileMenu()"></div>
+<body class="bg-gray-50 min-h-screen font-sans antialiased text-gray-900">
+
+    <div id="mobile-menu-overlay"
+         class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity duration-300 opacity-0"
+         onclick="closeMobileMenu()"></div>
 
     <div class="flex min-h-screen">
-        <?php if($guard === 'web'): ?>
-            <?php if (isset($component)) { $__componentOriginal257baafdfbcbd9e6d63f040030148322 = $component; } ?>
+        
+        <aside class="z-50">
+            <?php if($guard === 'web'): ?>
+                <?php if (isset($component)) { $__componentOriginal257baafdfbcbd9e6d63f040030148322 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal257baafdfbcbd9e6d63f040030148322 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.sidebar-admin','data' => ['active' => $sidebarActive]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('sidebar-admin'); ?>
@@ -65,8 +74,8 @@ unset($__defined_vars, $__key, $__value); ?>
 <?php $component = $__componentOriginal257baafdfbcbd9e6d63f040030148322; ?>
 <?php unset($__componentOriginal257baafdfbcbd9e6d63f040030148322); ?>
 <?php endif; ?>
-        <?php elseif($guard === 'pelanggan'): ?>
-            <?php if (isset($component)) { $__componentOriginalfff14c7a5031171705bb5c712eab0552 = $component; } ?>
+            <?php elseif($guard === 'pelanggan'): ?>
+                <?php if (isset($component)) { $__componentOriginalfff14c7a5031171705bb5c712eab0552 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginalfff14c7a5031171705bb5c712eab0552 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.sidebar-pelanggan','data' => ['active' => $sidebarActive]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('sidebar-pelanggan'); ?>
@@ -86,10 +95,15 @@ unset($__defined_vars, $__key, $__value); ?>
 <?php $component = $__componentOriginalfff14c7a5031171705bb5c712eab0552; ?>
 <?php unset($__componentOriginalfff14c7a5031171705bb5c712eab0552); ?>
 <?php endif; ?>
-        <?php endif; ?>
+            <?php endif; ?>
+        </aside>
 
-        <div class="flex-1 flex flex-col lg:ml-0">
-            <?php if (isset($component)) { $__componentOriginala591787d01fe92c5706972626cdf7231 = $component; } ?>
+        
+        <div class="flex-1 flex flex-col min-w-0 lg:pl-72 transition-all duration-300">
+
+            
+            <header class="sticky top-0 z-30">
+                <?php if (isset($component)) { $__componentOriginala591787d01fe92c5706972626cdf7231 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginala591787d01fe92c5706972626cdf7231 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.navbar','data' => ['user' => auth()->user(),'guard' => $guard]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('navbar'); ?>
@@ -109,12 +123,17 @@ unset($__defined_vars, $__key, $__value); ?>
 <?php $component = $__componentOriginala591787d01fe92c5706972626cdf7231; ?>
 <?php unset($__componentOriginala591787d01fe92c5706972626cdf7231); ?>
 <?php endif; ?>
+            </header>
 
-            <main class="flex-1 p-4 lg:p-8">
-                <?php echo e($slot); ?>
+            
+            <main class="flex-1 px-4 lg:px-6 pb-12">
+                <div class="container mx-auto">
+                    <?php echo e($slot); ?>
 
+                </div>
             </main>
 
+            
             <?php if (isset($component)) { $__componentOriginal8a8716efb3c62a45938aca52e78e0322 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal8a8716efb3c62a45938aca52e78e0322 = $attributes; } ?>
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.footer','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -139,30 +158,48 @@ unset($__defined_vars, $__key, $__value); ?>
     </div>
 
     <script>
+        /**
+         * Logic untuk Mobile Menu
+         * Pastikan di Sidebar Component Anda memiliki class 'sidebar-mobile'
+         */
+        const getElements = () => ({
+            sidebar: document.querySelector('.sidebar-mobile'),
+            overlay: document.getElementById('mobile-menu-overlay')
+        });
+
         function toggleMobileMenu() {
-            const sidebar = document.querySelector('.sidebar-mobile');
-            const overlay = document.getElementById('mobile-menu-overlay');
+            const { sidebar, overlay } = getElements();
 
             if (sidebar && overlay) {
-                sidebar.classList.toggle('translate-x-0');
-                sidebar.classList.toggle('-translate-x-full');
-                overlay.classList.toggle('hidden');
+                const isOpen = sidebar.classList.contains('translate-x-0');
+
+                if (isOpen) {
+                    closeMobileMenu();
+                } else {
+                    sidebar.classList.replace('-translate-x-full', 'translate-x-0');
+                    overlay.classList.remove('hidden');
+                    setTimeout(() => overlay.classList.add('opacity-100'), 10);
+                    document.body.classList.add('overflow-hidden');
+                }
             }
         }
 
         function closeMobileMenu() {
-            const sidebar = document.querySelector('.sidebar-mobile');
-            const overlay = document.getElementById('mobile-menu-overlay');
+            const { sidebar, overlay } = getElements();
 
             if (sidebar && overlay) {
-                sidebar.classList.add('-translate-x-full');
-                sidebar.classList.remove('translate-x-0');
-                overlay.classList.add('hidden');
+                sidebar.classList.replace('translate-x-0', '-translate-x-full');
+                overlay.classList.remove('opacity-100');
+                document.body.classList.remove('overflow-hidden');
+
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                }, 300); // Sesuai durasi transisi
             }
         }
 
-        // Close mobile menu when clicking on a link
-        document.addEventListener('DOMContentLoaded', function() {
+        // Handle link clicks inside mobile sidebar
+        document.addEventListener('DOMContentLoaded', () => {
             const sidebarLinks = document.querySelectorAll('.sidebar-mobile a');
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', closeMobileMenu);

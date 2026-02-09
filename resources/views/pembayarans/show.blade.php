@@ -95,13 +95,13 @@
         </div>
 
         <div class="mt-6 flex justify-between">
-            <x-button href="{{ route('pembayarans.index') }}" class="bg-gray-600 hover:bg-gray-700">Kembali ke Riwayat Pembayaran</x-button>
+            <x-button href="{{ route('pembayarans.index') }}" variant="secondary">Kembali ke Riwayat Pembayaran</x-button>
             @if(auth()->guard('web')->check())
                 <div class="flex gap-2">
-                    <x-button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700">
+                    <x-button onclick="window.print()" variant="primary">
                         <i class="fas fa-print mr-1"></i>Cetak Struk
                     </x-button>
-                    <x-button href="{{ route('pembayarans.create') }}" class="bg-green-600 hover:bg-green-700">
+                    <x-button href="{{ route('pembayarans.create') }}" variant="success">
                         <i class="fas fa-plus mr-1"></i>Pembayaran Baru
                     </x-button>
                 </div>

@@ -23,7 +23,7 @@
             </div>
             <div class="flex items-center justify-between mt-6">
                 <x-button type="submit">Simpan</x-button>
-                <x-button href="{{ route('tarifs.index') }}" class="bg-gray-600 hover:bg-gray-700">Batal</x-button>
+                <x-button href="{{ route('tarifs.index') }}" variant="secondary">Batal</x-button>
             </div>
         </form>
     </x-card>

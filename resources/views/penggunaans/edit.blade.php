@@ -62,7 +62,7 @@
             </div>
             <div class="flex items-center justify-between mt-6">
                 <x-button type="submit">Update</x-button>
-                <x-button href="{{ route('penggunaans.index') }}" class="bg-gray-600 hover:bg-gray-700">Batal</x-button>
+                <x-button href="{{ route('penggunaans.index') }}" variant="secondary">Batal</x-button>
             </div>
         </form>
     </x-card>

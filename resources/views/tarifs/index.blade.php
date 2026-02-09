@@ -28,11 +28,11 @@
                         <td class="px-6 py-4 border border-gray-300">{{ $tarif->daya }}</td>
                         <td class="px-6 py-4 border border-gray-300">Rp {{ number_format($tarif->tarifperkwh, 0, ',', '.') }}</td>
                         <td class="px-6 py-4 border border-gray-300">
-                            <x-button href="{{ route('tarifs.edit', $tarif) }}" class="mr-2 bg-yellow-600 hover:bg-yellow-700">Edit</x-button>
+                            <x-button href="{{ route('tarifs.edit', $tarif) }}" variant="warning" class="mr-2">Edit</x-button>
                             <form action="{{ route('tarifs.destroy', $tarif) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <x-button type="submit" class="bg-red-600 hover:bg-red-700" onclick="return confirm('Yakin hapus tarif ini?')">Hapus</x-button>
+                                <x-button type="submit" variant="danger" onclick="return confirm('Yakin hapus tarif ini?')">Hapus</x-button>
                             </form>
                         </td>
                     </tr>

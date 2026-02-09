@@ -77,7 +77,7 @@
                                     Rp {{ number_format($tagihanItem->jumlah_meter * ($tagihanItem->pelanggan->tarif->tarifperkwh ?? 0), 0, ',', '.') }}
                                 </td>
                                 <td class="px-6 py-4 border border-gray-300">
-                                    <x-button href="{{ route('pembayarans.create', ['tagihan_id' => $tagihanItem->id_tagihan]) }}" class="bg-green-600 hover:bg-green-700">
+                                    <x-button href="{{ route('pembayarans.create', ['tagihan_id' => $tagihanItem->id_tagihan]) }}" variant="success">
                                         <i class="fas fa-credit-card mr-1"></i>Bayar
                                     </x-button>
                                 </td>
@@ -157,7 +157,7 @@
 
                 <div class="flex items-center justify-between">
                     <x-button type="submit">Proses Pembayaran</x-button>
-                    <x-button href="{{ route('pembayarans.create') }}" class="bg-gray-600 hover:bg-gray-700">Kembali</x-button>
+                    <x-button href="{{ route('pembayarans.create') }}" variant="secondary">Kembali</x-button>
                 </div>
             </form>
         </x-card>

@@ -33,7 +33,7 @@
         </div>
 
         <div class="flex items-center justify-between mt-6">
-            <x-button href="{{ route('penggunaans.index') }}" class="bg-gray-600 hover:bg-gray-700">Kembali</x-button>
+            <x-button href="{{ route('penggunaans.index') }}" variant="secondary">Kembali</x-button>
             <x-button href="{{ route('penggunaans.edit', $penggunaan->id_penggunaan) }}">Edit</x-button>
         </div>
     </x-card>

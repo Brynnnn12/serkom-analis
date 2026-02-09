@@ -153,14 +153,14 @@
                             <td class="px-6 py-4 border border-gray-300">
                                 <?php if (isset($component)) { $__componentOriginald0f1fd2689e4bb7060122a5b91fe8561 = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginald0f1fd2689e4bb7060122a5b91fe8561 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.button','data' => ['href' => ''.e($isAdmin ? route('pembayarans.show', $pembayaran) : route('pelanggan.pembayarans.show', $pembayaran)).'','class' => 'bg-blue-600 hover:bg-blue-700']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.button','data' => ['href' => ''.e($isAdmin ? route('pembayarans.show', $pembayaran) : route('pelanggan.pembayarans.show', $pembayaran)).'','variant' => 'primary']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('button'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['href' => ''.e($isAdmin ? route('pembayarans.show', $pembayaran) : route('pelanggan.pembayarans.show', $pembayaran)).'','class' => 'bg-blue-600 hover:bg-blue-700']); ?>
+<?php $component->withAttributes(['href' => ''.e($isAdmin ? route('pembayarans.show', $pembayaran) : route('pelanggan.pembayarans.show', $pembayaran)).'','variant' => 'primary']); ?>
                                     <i class="fas fa-eye mr-1"></i>Detail
                                  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>

@@ -29,30 +29,45 @@ foreach ($attributes->all() as $__key => $__value) {
 
 unset($__defined_vars, $__key, $__value); ?>
 
-<div class="sidebar-mobile bg-blue-800 text-white w-64 min-h-screen p-4 fixed lg:static inset-y-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out lg:flex lg:flex-col">
-    <div class="flex items-center justify-between mb-6">
-        <h2 class="text-2xl font-bold text-center flex-1">Menu Pelanggan</h2>
-        <button onclick="closeMobileMenu()" class="lg:hidden text-white hover:text-gray-200">
+<aside class="sidebar-mobile fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none">
+    <div class="p-6 flex items-center justify-between border-b border-slate-800">
+        <div class="flex items-center space-x-3">
+            <div class="bg-emerald-500 p-2 rounded-lg shadow-lg">
+                <i class="fas fa-home text-xl text-white"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tight">Pelanggan Area</span>
+        </div>
+        <button onclick="closeMobileMenu()" class="lg:hidden p-2 rounded-md hover:bg-slate-800 transition-colors">
             <i class="fas fa-times text-xl"></i>
         </button>
     </div>
-    <nav class="space-y-2 flex-1">
-        <a href="<?php echo e(route('pelanggan.dashboard')); ?>"
-           class="block py-4 px-5 rounded-lg text-lg transition-colors duration-200 <?php echo e($active === 'dashboard' ? 'bg-green-600' : 'hover:bg-green-700'); ?>">
-            <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
-        </a>
-        <a href="<?php echo e(route('pelanggan.tagihans.index')); ?>"
-           class="block py-4 px-5 rounded-lg text-lg transition-colors duration-200 <?php echo e($active === 'tagihans' ? 'bg-green-600' : 'hover:bg-green-700'); ?>">
-            <i class="fas fa-file-invoice-dollar mr-3"></i>Tagihan Saya
-        </a>
-        <a href="<?php echo e(route('pelanggan.pembayarans.index')); ?>"
-           class="block py-4 px-5 rounded-lg text-lg transition-colors duration-200 <?php echo e($active === 'pembayarans' ? 'bg-green-600' : 'hover:bg-green-700'); ?>">
-            <i class="fas fa-credit-card mr-3"></i>Riwayat Pembayaran
-        </a>
-        <a href="<?php echo e(route('pelanggan.profil')); ?>"
-           class="block py-4 px-5 rounded-lg text-lg transition-colors duration-200 <?php echo e($active === 'profil' ? 'bg-green-600' : 'hover:bg-green-700'); ?>">
-            <i class="fas fa-user mr-3"></i>Profil Saya
-        </a>
+
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <?php
+            $menus = [
+                ['id' => 'dashboard', 'icon' => 'fa-tachometer-alt', 'label' => 'Dashboard', 'route' => 'pelanggan.dashboard'],
+                ['id' => 'tagihans', 'icon' => 'fa-file-invoice-dollar', 'label' => 'Tagihan Saya', 'route' => 'pelanggan.tagihans.index'],
+                ['id' => 'pembayarans', 'icon' => 'fa-history', 'label' => 'Riwayat Bayar', 'route' => 'pelanggan.pembayarans.index'],
+                ['id' => 'profil', 'icon' => 'fa-user-circle', 'label' => 'Profil Saya', 'route' => 'pelanggan.profil'],
+            ];
+        ?>
+
+        <?php $__currentLoopData = $menus; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $menu): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <a href="<?php echo e(route($menu['route'])); ?>"
+               class="flex items-center px-4 py-3.5 rounded-xl transition-all duration-300 group <?php echo e($active === $menu['id'] ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-900/40' : 'text-slate-400 hover:bg-slate-800 hover:text-emerald-400'); ?>">
+                <div class="w-8 flex justify-center text-lg">
+                    <i class="fas <?php echo e($menu['icon']); ?> transition-transform group-hover:rotate-12"></i>
+                </div>
+                <span class="ml-3 font-semibold"><?php echo e($menu['label']); ?></span>
+            </a>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
     </nav>
-</div>
+
+    <div class="m-4 p-4 bg-slate-800/50 rounded-2xl border border-slate-700">
+        <p class="text-xs text-slate-400 mb-2">Butuh Bantuan?</p>
+        <a href="#" class="text-xs text-emerald-400 hover:underline flex items-center">
+            <i class="fas fa-headset mr-2"></i> Hubungi CS
+        </a>
+    </div>
+</aside>
 <?php /**PATH D:\Serkom-2\serkom\resources\views/components/sidebar-pelanggan.blade.php ENDPATH**/ ?>

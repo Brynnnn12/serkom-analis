@@ -31,7 +31,7 @@
                     <input type="password" id="password" name="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200" placeholder="Masukkan password" required>
                 </div>
                 <div class="flex items-center justify-between">
-                    <x-button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200">Masuk</x-button>
+                    <x-button type="submit" class="w-full" variant="primary">Masuk</x-button>
                 </div>
             </form>
 

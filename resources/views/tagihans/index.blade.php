@@ -83,7 +83,7 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 border border-gray-300">
-                                <x-button href="{{ $isAdmin ? route('tagihans.show', $tagihan) : route('pelanggan.tagihans.show', $tagihan) }}" class="bg-blue-600 hover:bg-blue-700">
+                                <x-button href="{{ $isAdmin ? route('tagihans.show', $tagihan) : route('pelanggan.tagihans.show', $tagihan) }}" variant="primary">
                                     <i class="fas fa-eye mr-1"></i>Detail
                                 </x-button>
                             </td>

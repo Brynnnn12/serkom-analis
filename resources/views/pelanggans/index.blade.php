@@ -34,11 +34,11 @@
                             <td class="px-6 py-4 border border-gray-300">{{ $pelanggan->tarif->daya ?? 'N/A' }}</td>
                             <td class="px-6 py-4 border border-gray-300">{{ $pelanggan->username }}</td>
                             <td class="px-6 py-4 border border-gray-300">
-                                <x-button href="{{ route('pelanggans.edit', $pelanggan) }}" class="mr-2 bg-yellow-600 hover:bg-yellow-700">Edit</x-button>
+                                <x-button href="{{ route('pelanggans.edit', $pelanggan) }}" variant="warning" class="mr-2">Edit</x-button>
                                 <form action="{{ route('pelanggans.destroy', $pelanggan) }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
-                                    <x-button type="submit" class="bg-red-600 hover:bg-red-700" onclick="return confirm('Yakin hapus pelanggan ini?')">Hapus</x-button>
+                                    <x-button type="submit" variant="danger" onclick="return confirm('Yakin hapus pelanggan ini?')">Hapus</x-button>
                                 </form>
                             </td>
                         </tr>

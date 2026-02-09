@@ -89,9 +89,9 @@
         @endif
 
         <div class="mt-6 flex justify-between">
-            <x-button href="{{ route('tagihans.index') }}" class="bg-gray-600 hover:bg-gray-700">Kembali ke Daftar Tagihan</x-button>
+            <x-button href="{{ route('tagihans.index') }}" variant="secondary">Kembali ke Daftar Tagihan</x-button>
             @if(auth()->guard('web')->check() && $tagihan->status == 'Belum Bayar')
-                <x-button href="{{ route('pembayarans.create', ['tagihan_id' => $tagihan->id_tagihan]) }}" class="bg-green-600 hover:bg-green-700">Proses Pembayaran</x-button>
+                <x-button href="{{ route('pembayarans.create', ['tagihan_id' => $tagihan->id_tagihan]) }}" variant="success">Proses Pembayaran</x-button>
             @endif
         </div>
     </x-card>

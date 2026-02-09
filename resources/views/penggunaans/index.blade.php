@@ -10,7 +10,7 @@
         </div>
     @endif
 
-    <x-button href="{{ route('penggunaans.create') }}" class="mb-4">Input Penggunaan Baru</x-button>
+    <x-button href="{{ route('penggunaans.create') }}" class="mb-4" variant="primary">Input Penggunaan Baru</x-button>
 
     <x-card class="p-6 bg-white rounded-lg shadow-md">
         <div class="overflow-x-auto">
@@ -44,11 +44,11 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 border border-gray-300">
-                                <x-button href="{{ route('penggunaans.edit', $penggunaan) }}" class="mr-2 bg-yellow-600 hover:bg-yellow-700">Edit</x-button>
+                                <x-button href="{{ route('penggunaans.edit', $penggunaan) }}" variant="warning" class="mr-2">Edit</x-button>
                                 <form action="{{ route('penggunaans.destroy', $penggunaan) }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
-                                    <x-button type="submit" class="bg-red-600 hover:bg-red-700" onclick="return confirm('Yakin hapus penggunaan ini?')">Hapus</x-button>
+                                    <x-button type="submit" variant="danger" onclick="return confirm('Yakin hapus penggunaan ini?')">Hapus</x-button>
                                 </form>
                             </td>
                         </tr>
